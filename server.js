@@ -284,4 +284,3 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 //       });
 //     });
 //   }
-  
