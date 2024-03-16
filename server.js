@@ -172,7 +172,7 @@ app.get('/:animeId/episodios/:id', async (req, res) => {
 app.get('/:animeId/episodios', async (req, res) => {
     try {
         // Encontra todos os episódios associados ao anime específico
-        const episodios = await Episodio.find({ anime: req.params.animeId });
+        const episodios = await Episodio.find({ anime: req.params.animeId }).sort({ number: 1 });
         
         // Verifica se há episódios encontrados
         if (episodios.length === 0) {
