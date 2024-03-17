@@ -145,6 +145,7 @@ const EpisodioSchema = new mongoose.Schema({
     image: String,
     video: String,
     anime: String,
+    download: String,
 });
 
 const Episodio = mongoose.model('Episodio', EpisodioSchema);
@@ -196,13 +197,14 @@ app.post('/:animeId/episodios', async (req, res) => {
             return res.status(404).send('Anime não encontrado');
         }
 
-        const { number, title, image, video } = req.body;
+        const { number, title, image, video, download } = req.body;
 
         const episodio = new Episodio({
             number: number,
             title: title,
             image: image,
             video: video,
+            download: download,
             anime: animeId
         });
 
