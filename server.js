@@ -32,7 +32,7 @@ app.get('/', async(req, res) => {
             $or: [
                 { title: { $regex: regex } },
                 // { description: { $regex: regex } },
-                { studio: { $regex: regex } },
+                // { studio: { $regex: regex } },
                 { english: { $regex: regex } },
                 
                 // Adicione outros campos relevantes aqui
