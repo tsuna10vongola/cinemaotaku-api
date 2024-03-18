@@ -31,6 +31,7 @@ app.get('/', async(req, res) => {
         const animes = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
+                // { description: { $regex: regex } },
                 { studio: { $regex: regex } },
                 { english: { $regex: regex } },
                 
