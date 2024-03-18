@@ -20,7 +20,8 @@ const Anime = mongoose.model('Anime', {
     time: String,
     genres: String,
     completed: Boolean,
-    studio: String
+    studio: String,
+    movie: Boolean,
 })
 
 app.get('/', async(req, res)=>{
@@ -44,6 +45,10 @@ app.get('/search', async (req, res) => {
         const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
         const regex = new RegExp(search, 'i');
 
+        if (!search) {
+            return res.status(400).send('Por favor, forneça um termo de pesquisa');
+        }
+        
         const animes = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
@@ -108,7 +113,8 @@ app.put('/:id', async (req, res) => {
             time: req.body.time,
             genres: req.body.genres,
             completed: req.body.completed,
-            studio: req.body.studio
+            studio: req.body.studio,
+            movie: req.body.movie,
         }, {
             new: true
         });
@@ -129,7 +135,8 @@ app.put('/:id', async (req, res) => {
             time: updatedAnime.time,
             genres: updatedAnime.genres,
             completed: updatedAnime.completed,
-            studio: updatedAnime.studio
+            studio: updatedAnime.studio,
+            movie: updatedAnime.movie,
         };
 
         return res.send(responseAnime);
@@ -153,7 +160,8 @@ app.post('/', async (req, res) => {
         time: req.body.time,
         genres: req.body.genres,
         completed: req.body.completed,
-        studio: req.body.studio
+        studio: req.body.studio,
+        movie: req.body.movie,
     })
 
     await anime.save()
