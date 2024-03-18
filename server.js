@@ -23,9 +23,25 @@ const Anime = mongoose.model('Anime', {
     studio: String
 })
 
-app.get('/', async(req, res) => {
+app.get('/', async(req, res)=>{
+
+    try{
+        const animes = await Anime.find()
+    if(!animes){
+        return res.status(404).send('Anime não encontrado');
+    }
+    return res.send(animes)
+    }
+    
+    catch(error){
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+})
+
+app.get('/search', async (req, res) => {
     try {
-        const search = req.query.search;
+        const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
         const regex = new RegExp(search, 'i');
 
         const animes = await Anime.find({
@@ -49,9 +65,6 @@ app.get('/', async(req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-
-
-
 
 app.get('/:id', async (req, res) => {
     try {
