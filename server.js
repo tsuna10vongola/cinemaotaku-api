@@ -8,7 +8,7 @@ const port = 3000
 
 mongoose.connect('mongodb+srv://sheriffvongola:NBNReL02k617MTrU@anime.as6tlgm.mongodb.net/')
 
-const Anime = mongoose.model('Anime', {
+const AnimeSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     title: String,
     english: String,
@@ -22,7 +22,10 @@ const Anime = mongoose.model('Anime', {
     completed: Boolean,
     studio: String,
     movie: Boolean,
-})
+}, { timestamps: true });
+
+const Anime = mongoose.model('Anime', AnimeSchema, 'animes');
+
 
 app.get('/', async(req, res)=>{
 
@@ -175,15 +178,17 @@ app.listen(port, () => {
 
 
 const EpisodioSchema = new mongoose.Schema({
-    number: { type: Number, required: true }, // Adiciona a propriedade "id" para o número do episódio
+    number: { type: Number, required: true, unique: true }, // Adiciona a propriedade "id" para o número do episódio
     title: String,
     image: String,
     video: String,
     anime: String,
     download: String,
-});
+},
+{ timestamps: true }
+);
 
-const Episodio = mongoose.model('Episodio', EpisodioSchema);
+const Episodio = mongoose.model('Episodio', EpisodioSchema, 'episodios');
 
 // Rota para obter um episódio de um anime específico
 app.get('/:animeId/episodios/:id', async (req, res) => {
@@ -286,6 +291,49 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 
         return res.send(deletedEpisodio);
     } catch(error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
+app.get('/recentes/animes', async (req, res) => {
+    try {
+        // Consulta para obter os últimos animes adicionados
+        const recentAnimes = await Anime.find().sort({ createdAt: -1 }).limit(12);
+        
+        // Verificar se há animes recentes encontrados
+        if (recentAnimes.length === 0) {
+            return res.status(404).send('Nenhum anime recente encontrado');
+        }
+
+        return res.send(recentAnimes);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
+app.get('/recentes/episodes', async (req, res) => {
+    try {
+        // Agregação para obter apenas o último episódio de cada anime
+        const recentEpisodes = await Episodio.aggregate([
+            { $sort: { anime: 1, createdAt: -1 } }, // Ordena os episódios por anime e data de criação descendente
+            {
+                $group: {
+                    _id: '$anime', // Agrupa os episódios pelo campo 'anime'
+                    latestEpisode: { $first: '$$ROOT' } // Projeta apenas o primeiro documento de cada grupo (último episódio)
+                }
+            },
+            { $replaceRoot: { newRoot: '$latestEpisode' } } // Substitui o documento raiz pelo último episódio de cada grupo
+        ]);
+
+        // Verificar se há episódios recentes encontrados
+        if (recentEpisodes.length === 0) {
+            return res.status(404).send('Nenhum episódio recente encontrado');
+        }
+
+        return res.send(recentEpisodes);
+    } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
