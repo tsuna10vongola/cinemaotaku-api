@@ -237,13 +237,13 @@ app.post('/:animeId/episodios', async (req, res) => {
             return res.status(404).send('Anime não encontrado');
         }
 
+        const { number, title, image, video, download } = req.body;
         // Verifica se já existe um episódio com o mesmo número para o anime específico
         const existingEpisode = await Episodio.findOne({ anime: animeId, number: number });
         if (existingEpisode) {
             return res.status(400).send('Um episódio com este número já existe para este anime');
         }
-        const { number, title, image, video, download } = req.body;
-
+        
         const episodio = new Episodio({
             number: number,
             title: title,
