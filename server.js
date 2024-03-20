@@ -340,22 +340,22 @@ app.get('/recentes/episodes', async (req, res) => {
 });
 
 // Rota para obter o último episódio dublado de cada anime
-app.get('/recentes/episodios/dublados', async (req, res) => {
+app.get('/recentes/episodes/dublados', async (req, res) => {
     try {
-        // Agregação para obter apenas o último episódio dublado de cada anime
         const recentDubbedEpisodes = await Episodio.aggregate([
-            { $match: { dub: true } }, // Filtra apenas os episódios dublados
-            { $sort: { anime: 1, createdAt: -1 } }, // Ordena os episódios por anime e data de criação descendente
+            { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
+            { $unwind: '$animeInfo' },
+            { $match: { 'animeInfo.dub': true } }, // Filtra apenas os episódios cujo anime está dublado
+            { $sort: { anime: 1, createdAt: -1 } },
             {
                 $group: {
-                    _id: '$anime', // Agrupa os episódios pelo campo 'anime'
-                    latestDubbedEpisode: { $first: '$$ROOT' } // Projeta apenas o primeiro documento de cada grupo (último episódio dublado)
+                    _id: '$anime', 
+                    latestEpisode: { $first: '$$ROOT' } // Aqui corrigimos para pegar o primeiro episódio de cada grupo (último episódio dublado)
                 }
             },
-            { $replaceRoot: { newRoot: '$latestDubbedEpisode' } } // Substitui o documento raiz pelo último episódio dublado de cada grupo
+            { $replaceRoot: { newRoot: '$latestEpisode' } } 
         ]);
 
-        // Verificar se há episódios dublados recentes encontrados
         if (recentDubbedEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio dublado recente encontrado');
         }
@@ -368,22 +368,22 @@ app.get('/recentes/episodios/dublados', async (req, res) => {
 });
 
 // Rota para obter o último episódio legendado de cada anime
-app.get('/recentes/episodios/legendados', async (req, res) => {
+app.get('/recentes/episodes/legendados', async (req, res) => {
     try {
-        // Agregação para obter apenas o último episódio legendado de cada anime
         const recentSubtitledEpisodes = await Episodio.aggregate([
-            { $match: { dub: false } }, // Filtra apenas os episódios legendados
-            { $sort: { anime: 1, createdAt: -1 } }, // Ordena os episódios por anime e data de criação descendente
+            { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
+            { $unwind: '$animeInfo' },
+            { $match: { 'animeInfo.dub': false } }, // Filtra apenas os episódios cujo anime não está dublado
+            { $sort: { anime: 1, createdAt: -1 } },
             {
                 $group: {
-                    _id: '$anime', // Agrupa os episódios pelo campo 'anime'
-                    latestSubtitledEpisode: { $first: '$$ROOT' } // Projeta apenas o primeiro documento de cada grupo (último episódio legendado)
+                    _id: '$anime', 
+                    latestEpisode: { $first: '$$ROOT' } // Aqui corrigimos para pegar o primeiro episódio de cada grupo (último episódio legendado)
                 }
             },
-            { $replaceRoot: { newRoot: '$latestSubtitledEpisode' } } // Substitui o documento raiz pelo último episódio legendado de cada grupo
+            { $replaceRoot: { newRoot: '$latestEpisode' } } 
         ]);
 
-        // Verificar se há episódios legendados recentes encontrados
         if (recentSubtitledEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio legendado recente encontrado');
         }
@@ -394,6 +394,7 @@ app.get('/recentes/episodios/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 
