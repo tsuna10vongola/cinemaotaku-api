@@ -239,6 +239,24 @@ app.post('/:animeId/episodios', async (req, res) => {
 
         const { number, title, image, video, download } = req.body;
 
+        // Verifica se já existe um episódio com o mesmo número para o anime específico
+        const existingEpisode = await Episodio.findOne({ anime: animeId, number: number });
+        if (existingEpisode) {
+            return res.status(400).send('Um episódio com este número já existe para este anime');
+        }
+        
+        // Verifica se já existe um episódio com o mesmo video para o anime específico
+        const existingVideo = await Episodio.findOne({ anime: animeId, video: video });
+        if (existingVideo) {
+            return res.status(400).send('Um episódio com este video já existe para este anime');
+        }
+
+        // Verifica se já existe um episódio com o mesmo thumbnail para o anime específico
+        const existingImage = await Episodio.findOne({ anime: animeId, image: image });
+        if (existingImage) {
+            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
+        }
+
         const episodio = new Episodio({
             number: number,
             title: title,
@@ -260,6 +278,22 @@ app.post('/:animeId/episodios', async (req, res) => {
 // Rota para atualizar um episódio específico de um anime pelo número do episódio
 app.put('/:animeId/episodios/:id', async (req, res) => {
     try {
+        const existingEpisode = await Episodio.findOne({ anime: req.params.animeId, number: req.body.number });
+        if (existingEpisode && existingEpisode._id.toString() !== req.params.id) {
+            return res.status(400).send('Um episódio com este número já existe para este anime');
+        }
+
+        const existingVideo = await Episodio.findOne({ anime: req.params.animeId, video: req.body.video });
+        if (existingVideo && existingVideo._id.toString() !== req.params.id) {
+            return res.status(400).send('Um episódio com este video já existe para este anime');
+        }
+
+        const existingImage = await Episodio.findOne({ anime: req.params.animeId, image: req.body.image });
+        if (existingImage && existingImage._id.toString() !== req.params.id) {
+            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
+        }
+
+
         const episodio = await Episodio.findOneAndUpdate(
             { anime: req.params.animeId, number: req.params.id },
             req.body,
@@ -276,6 +310,7 @@ app.put('/:animeId/episodios/:id', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 // Rota para excluir um episódio específico de um anime pelo número do episódio
 app.delete('/:animeId/episodios/:id', async (req, res) => {
