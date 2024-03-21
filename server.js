@@ -283,6 +283,17 @@ app.put('/:animeId/episodios/:id', async (req, res) => {
             return res.status(400).send('Um episódio com este número já existe para este anime');
         }
 
+        const existingVideo = await Episodio.findOne({ anime: req.params.animeId, video: req.body.video });
+        if (existingVideo && existingVideo._id.toString() !== req.params.id) {
+            return res.status(400).send('Um episódio com este video já existe para este anime');
+        }
+
+        const existingImage = await Episodio.findOne({ anime: req.params.animeId, image: req.body.image });
+        if (existingImage && existingImage._id.toString() !== req.params.id) {
+            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
+        }
+
+
         const episodio = await Episodio.findOneAndUpdate(
             { anime: req.params.animeId, number: req.params.id },
             req.body,
