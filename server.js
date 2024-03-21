@@ -244,6 +244,18 @@ app.post('/:animeId/episodios', async (req, res) => {
         if (existingEpisode) {
             return res.status(400).send('Um episódio com este número já existe para este anime');
         }
+        
+        // Verifica se já existe um episódio com o mesmo video para o anime específico
+        const existingVideo = await Episodio.findOne({ anime: animeId, video: video });
+        if (existingVideo) {
+            return res.status(400).send('Um episódio com este video já existe para este anime');
+        }
+
+        // Verifica se já existe um episódio com o mesmo thumbnail para o anime específico
+        const existingImage = await Episodio.findOne({ anime: animeId, image: image });
+        if (existingImage) {
+            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
+        }
 
         const episodio = new Episodio({
             number: number,
