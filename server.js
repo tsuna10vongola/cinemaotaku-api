@@ -267,23 +267,28 @@ app.post('/:animeId/episodios', async (req, res) => {
         const imagesSet = new Set();
 
         // Verificar duplicatas nos episódios enviados na requisição
-        if (numbersSet.has(number)) {
-            return res.status(400).send(`Dois episódios com o mesmo número ${number} foram enviados na requisição`);
+        for (const episode of episodios) {
+            const number = episode.number; // Defina a variável number dentro do loop
+        
+            if (numbersSet.has(number)) {
+                return res.status(400).send(`Dois episódios com o mesmo número ${number} foram enviados na requisição`);
+            }
+            numbersSet.add(number);
+        
+            if (videosSet.has(episode.video)) {
+                return res.status(400).send(`Dois episódios com o mesmo vídeo ${episode.video} foram enviados na requisição`);
+            }
+            videosSet.add(episode.video);
+        
+            if (imagesSet.has(episode.image)) {
+                return res.status(400).send(`Dois episódios com a mesma imagem ${episode.image} foram enviados na requisição`);
+            }
+            imagesSet.add(episode.image);
         }
-        numbersSet.add(number);
-
-        if (videosSet.has(video)) {
-            return res.status(400).send(`Dois episódios com o mesmo vídeo ${video} foram enviados na requisição`);
-        }
-        videosSet.add(video);
-
-        if (imagesSet.has(image)) {
-            return res.status(400).send(`Dois episódios com a mesma imagem ${image} foram enviados na requisição`);
-        }
-        imagesSet.add(image);
+        
 
         // Salvar o episódio se não houver duplicatas
-        const savedEpisodes  = new Episodio.insertMany(episodios.map(ep => ({
+        const savedEpisodes  = await Episodio.insertMany(episodios.map(ep => ({
             number: ep.number,
             title: ep.title,
             image: ep.image,
