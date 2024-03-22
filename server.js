@@ -237,71 +237,43 @@ app.post('/:animeId/episodios', async (req, res) => {
             return res.status(404).send('Anime não encontrado');
         }
 
-        const { episodios } = req.body;
+        const { number, title, image, video, download } = req.body;
 
-        const numbersSet = new Set();
-        const videosSet = new Set();
-        const imagesSet = new Set();
-
-        for (const episode of episodios) {
-            if (numbersSet.has(episode.number)) {
-                return res.status(400).send(`Dois episódios com o mesmo número ${episode.number} foram enviados na requisição`);
-            }
-            numbersSet.add(episode.number);
-
-            if (videosSet.has(episode.video)) {
-                return res.status(400).send(`Dois episódios com o mesmo vídeo ${episode.video} foram enviados na requisição`);
-            }
-            videosSet.add(episode.video);
-
-            if (imagesSet.has(episode.image)) {
-                return res.status(400).send(`Dois episódios com a mesma imagem ${episode.image} foram enviados na requisição`);
-            }
-            imagesSet.add(episode.image);
+        // Verifica se já existe um episódio com o mesmo número para o anime específico
+        const existingEpisode = await Episodio.findOne({ anime: animeId, number: number });
+        if (existingEpisode) {
+            return res.status(400).send('Um episódio com este número já existe para este anime');
+        }
+        
+        // Verifica se já existe um episódio com o mesmo video para o anime específico
+        const existingVideo = await Episodio.findOne({ anime: animeId, video: video });
+        if (existingVideo) {
+            return res.status(400).send('Um episódio com este video já existe para este anime');
         }
 
-        // Se não houver duplicatas, verificar no banco de dados
-        const allEpisodes = await Episodio.find({ anime: animeId });
-        const episodeNumbers = allEpisodes.map(ep => ep.number);
-        const episodeVideos = allEpisodes.map(ep => ep.video);
-        const episodeImages = allEpisodes.map(ep => ep.image);
-
-        for (const episode of episodios) {
-            if (episodeNumbers.includes(episode.number)) {
-                return res.status(400).send(`Um episódio com o número ${episode.number} já existe para este anime`);
-            }
-
-            if (episodeVideos.includes(episode.video)) {
-                return res.status(400).send(`Um episódio com o vídeo ${episode.video} já existe para este anime`);
-            }
-
-            if (episodeImages.includes(episode.image)) {
-                return res.status(400).send(`Um episódio com a imagem ${episode.image} já existe para este anime`);
-            }
+        // Verifica se já existe um episódio com o mesmo thumbnail para o anime específico
+        const existingImage = await Episodio.findOne({ anime: animeId, image: image });
+        if (existingImage) {
+            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
         }
 
-        // Se não houver duplicatas, salvar os episódios
-        const episodiosSalvos = [];
-        for (const episodeData of episodios) {
-            const episodio = new Episodio({
-                number: episodeData.number,
-                title: episodeData.title,
-                image: episodeData.image,
-                video: episodeData.video,
-                download: episodeData.download,
-                anime: animeId
-            });
-            await episodio.save();
-            episodiosSalvos.push(episodio);
-        }
+        const episodio = new Episodio({
+            number: number,
+            title: title,
+            image: image,
+            video: video,
+            download: download,
+            anime: animeId
+        });
 
-        return res.status(201).send(episodiosSalvos);
+        await episodio.save();
+
+        return res.status(201).send(episodio);
     } catch(error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-
 
 // Rota para atualizar vários episódios de um anime
 app.put('/:animeId/episodios', async (req, res) => {
