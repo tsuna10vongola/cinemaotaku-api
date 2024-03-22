@@ -237,43 +237,73 @@ app.post('/:animeId/episodios', async (req, res) => {
             return res.status(404).send('Anime não encontrado');
         }
 
-        const { number, title, image, video, download } = req.body;
+        const episodios = req.body; // Obter os episódios diretamente de req.body
 
-        // Verifica se já existe um episódio com o mesmo número para o anime específico
-        const existingEpisode = await Episodio.findOne({ anime: animeId, number: number });
-        if (existingEpisode) {
-            return res.status(400).send('Um episódio com este número já existe para este anime');
-        }
-        
-        // Verifica se já existe um episódio com o mesmo video para o anime específico
-        const existingVideo = await Episodio.findOne({ anime: animeId, video: video });
-        if (existingVideo) {
-            return res.status(400).send('Um episódio com este video já existe para este anime');
+        // Verificar no banco de dados se já existem episódios com as mesmas propriedades
+        const existingEpisodes = await Episodio.find({ anime: animeId, number: { $in: episodios.map(ep => ep.number) } });
+        if (existingEpisodes.length > 0) {
+            const existingNumbers = existingEpisodes.map(ep => ep.number);
+            const duplicateNumbers = existingNumbers.join(', ');
+            return res.status(400).send(`Os números de episódio duplicados encontrados são: ${duplicateNumbers}`);
         }
 
-        // Verifica se já existe um episódio com o mesmo thumbnail para o anime específico
-        const existingImage = await Episodio.findOne({ anime: animeId, image: image });
-        if (existingImage) {
-            return res.status(400).send('Um episódio com esta imagem já existe para este anime');
+        const existingVideos = await Episodio.find({ anime: animeId, video: { $in: episodios.map(ep => ep.video) } });
+        if (existingVideos.length > 0) {
+            const existingNumbers = existingVideos.map(ep => ep.video);
+            const duplicateNumbers = existingNumbers.join(', ');
+            return res.status(400).send(`Os videos de episódio duplicados encontrados são: ${duplicateNumbers}`);
         }
 
-        const episodio = new Episodio({
-            number: number,
-            title: title,
-            image: image,
-            video: video,
-            download: download,
+        const existingImages = await Episodio.find({ anime: animeId, image: { $in: episodios.map(ep => ep.image) } });
+        if (existingImages.length > 0) {
+            const existingNumbers = existingImages.map(ep => ep.image);
+            const duplicateNumbers = existingNumbers.join(', ');
+            return res.status(400).send(`As thumbnails de episódio duplicados encontrados são: ${duplicateNumbers}`);
+        }
+
+        // Conjuntos para armazenar números, vídeos e imagens enviados nas requisições
+        const numbersSet = new Set();
+        const videosSet = new Set();
+        const imagesSet = new Set();
+
+        // Verificar duplicatas nos episódios enviados na requisição
+        if (numbersSet.has(number)) {
+            return res.status(400).send(`Dois episódios com o mesmo número ${number} foram enviados na requisição`);
+        }
+        numbersSet.add(number);
+
+        if (videosSet.has(video)) {
+            return res.status(400).send(`Dois episódios com o mesmo vídeo ${video} foram enviados na requisição`);
+        }
+        videosSet.add(video);
+
+        if (imagesSet.has(image)) {
+            return res.status(400).send(`Dois episódios com a mesma imagem ${image} foram enviados na requisição`);
+        }
+        imagesSet.add(image);
+
+        // Salvar o episódio se não houver duplicatas
+        const savedEpisodes  = new Episodio.insertMany(episodios.map(ep => ({
+            number: ep.number,
+            title: ep.title,
+            image: ep.image,
+            video: ep.video,
+            download: ep.download,
             anime: animeId
-        });
+        })));
 
-        await episodio.save();
+        // await episodio.save();
 
-        return res.status(201).send(episodio);
+        return res.status(201).send(savedEpisodes );
     } catch(error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
+
+
+
 
 // Rota para atualizar vários episódios de um anime
 app.put('/:animeId/episodios', async (req, res) => {
