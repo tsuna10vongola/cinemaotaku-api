@@ -447,21 +447,23 @@ app.get('/recentes/episodes', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-// Rota para obter o último episódio dublado de cada anime
+// Rota para obter os últimos episódios dublados de cada anime
 app.get('/recentes/episodes/dublados', async (req, res) => {
     try {
         const recentDubbedEpisodes = await Episodio.aggregate([
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
-            { $match: { 'animeInfo.dub': true } }, // Filtra apenas os episódios cujo anime está dublado
-            { $sort: { 'createdAt': -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
+            { $match: { 'animeInfo.dub': true } }, // Filter dubbed episodes
+            {
+                $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } // Sort by anime creation & episode creation (desc)
+            },
             {
                 $group: {
-                    _id: '$anime', 
-                    latestEpisode: { $first: '$$ROOT' } // Aqui corrigimos para pegar o primeiro episódio de cada grupo (último episódio dublado)
+                    _id: '$anime',
+                    latestEpisode: { $first: '$$ROOT' } // Get the first episode (latest dubbed)
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } } 
+            { $replaceRoot: { newRoot: '$latestEpisode' } }
         ]);
 
         if (recentDubbedEpisodes.length === 0) {
@@ -475,21 +477,23 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
     }
 });
 
-// Rota para obter o último episódio legendado de cada anime
+// Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
     try {
         const recentSubtitledEpisodes = await Episodio.aggregate([
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
-            { $match: { 'animeInfo.dub': false } }, // Filtra apenas os episódios cujo anime não está dublado
-            { $sort: { 'createdAt': -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
+            { $match: { 'animeInfo.dub': false } }, // Filter subtitled episodes
+            {
+                $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } // Sort by anime creation & episode creation (desc)
+            },
             {
                 $group: {
-                    _id: '$anime', 
-                    latestEpisode: { $first: '$$ROOT' } // Aqui corrigimos para pegar o primeiro episódio de cada grupo (último episódio legendado)
+                    _id: '$anime',
+                    latestEpisode: { $first: '$$ROOT' } // Get the first episode (latest subtitled)
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } } 
+            { $replaceRoot: { newRoot: '$latestEpisode' } }
         ]);
 
         if (recentSubtitledEpisodes.length === 0) {
@@ -502,7 +506,6 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-
 
 
 
