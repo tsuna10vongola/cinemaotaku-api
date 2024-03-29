@@ -447,7 +447,6 @@ app.get('/recentes/episodes', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-
 // Rota para obter o último episódio dublado de cada anime
 app.get('/recentes/episodes/dublados', async (req, res) => {
     try {
@@ -455,7 +454,7 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
             { $match: { 'animeInfo.dub': true } }, // Filtra apenas os episódios cujo anime está dublado
-            { $sort: { anime: 1, createdAt: -1 } },
+            { $sort: { createdAt: -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
             {
                 $group: {
                     _id: '$anime', 
@@ -483,7 +482,7 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
             { $match: { 'animeInfo.dub': false } }, // Filtra apenas os episódios cujo anime não está dublado
-            { $sort: { anime: 1, createdAt: -1 } },
+            { $sort: { createdAt: -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
             {
                 $group: {
                     _id: '$anime', 
@@ -503,6 +502,7 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 
