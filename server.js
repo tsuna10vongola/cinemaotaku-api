@@ -43,20 +43,6 @@ app.get('/', async(req, res)=>{
     }
 })
 
-// Rota para listar animes com suporte a paginação
-app.get('/anime', async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 30;
-    const offset = (page - 1) * limit;
-
-    try {
-        const animes = await Anime.find().skip(offset).limit(limit);
-        res.send(animes);
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
-});
-
 app.get('/search', async (req, res) => {
     try {
         const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
