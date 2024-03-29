@@ -454,7 +454,7 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
             { $match: { 'animeInfo.dub': true } }, // Filtra apenas os episódios cujo anime está dublado
-            { $sort: { createdAt: -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
+            { $sort: { 'createdAt': -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
             {
                 $group: {
                     _id: '$anime', 
@@ -482,7 +482,7 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
             { $match: { 'animeInfo.dub': false } }, // Filtra apenas os episódios cujo anime não está dublado
-            { $sort: { createdAt: -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
+            { $sort: { 'createdAt': -1 } }, // Ordena os episódios pelo valor createdAt em ordem decrescente
             {
                 $group: {
                     _id: '$anime', 
