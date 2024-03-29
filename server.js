@@ -51,9 +51,9 @@ app.get('/anime', async (req, res) => {
 
     try {
         const animes = await Anime.find().skip(offset).limit(limit);
-        res.json(animes);
+        res.send(animes);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).send({ message: err.message });
     }
 });
 
