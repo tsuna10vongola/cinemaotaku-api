@@ -123,6 +123,31 @@ app.get('/ongoing-list-page', async (req, res) => {
     }
 });
 
+// Rota para obter a lista de animes filtrados por letra com paginação
+app.get('/anime-AZ-page', async (req, res) => {
+    try {
+        const aph = req.query.aph.toUpperCase(); // Letra fornecida na URL
+        const page = req.query.page || 1; // Número da página
+        const limit = 30; // Limite de animes por página
+        const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
+
+        // Obter o número total de animes que começam com a letra fornecida
+        const totalAnimes = await Anime.countDocuments({ title: { $regex: '^' + aph } });
+
+        // Obter a lista de animes que começam com a letra fornecida na página atual
+        const animeList = await Anime.find({ title: { $regex: '^' + aph } })
+                                     .sort({ title: 1 })
+                                     .skip(skip)
+                                     .limit(limit);
+
+        return res.json({ totalAnimes, animeList });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
+// Rota para obter a lista de animes pesquisados
 app.get('/search', async (req, res) => {
     try {
         const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
