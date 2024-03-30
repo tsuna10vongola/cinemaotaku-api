@@ -43,9 +43,6 @@ app.get('/', async(req, res)=>{
     }
 })
 
-// Importe o modelo Anime, se necessário
-const Anime = require('./models/anime');
-
 // Rota para obter a lista de animes com paginação
 app.get('/anime-list-page', async (req, res) => {
     try {
