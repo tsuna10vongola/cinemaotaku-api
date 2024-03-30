@@ -530,9 +530,13 @@ app.get('/recentes/animes', async (req, res) => {
 // Rota para obter os últimos episódios
 app.get('/recentes/episodes', async (req, res) => {
     const perPage = 35; // Número de episódios por página
-    const page = req.query.page || 1; // Página atual (padrão: 1)
+    const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
 
     try {
+        // Obter o total de episódios recentes
+        const totalEpisodes = await Episodio.countDocuments();
+
+        // Obter os episódios recentes paginados
         const recentEpisodes = await Episodio.aggregate([
             { $sort: { anime: 1, createdAt: -1 } },
             {
@@ -548,12 +552,14 @@ app.get('/recentes/episodes', async (req, res) => {
             return res.status(404).send('Nenhum episódio recente encontrado');
         }
 
-        return res.send(recentEpisodes);
+        // Retornar tanto a lista de episódios como o total de episódios
+        return res.json({ totalEpisodes, recentEpisodes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 // Rota para obter os últimos episódios dublados de cada anime
 app.get('/recentes/episodes/dublados', async (req, res) => {
