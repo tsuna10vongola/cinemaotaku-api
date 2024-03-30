@@ -63,6 +63,25 @@ app.get('/anime-list-page', async (req, res) => {
     }
 });
 
+// Rota para obter a lista de animes com paginação
+app.get('/movie-list-page', async (req, res) => {
+    try {
+        const page = req.query.page || 1;
+        const limit = 32; // Limite de animes por página
+        const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
+
+        // Obter o número total de animes que são filmes
+        const totalAnimes = await Anime.countDocuments({ movie: true });
+
+        // Obter a lista de animes que são filmes da página atual
+        const animeList = await Anime.find({ movie: true }).sort({ title: 1 }).skip(skip).limit(limit);
+
+        return res.json({ totalAnimes, animeList });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
 
 
 
