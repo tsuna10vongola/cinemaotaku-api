@@ -47,7 +47,7 @@ app.get('/', async(req, res)=>{
 app.get('/anime-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 30; // Limite de animes por página
+        const limit = 32; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que não são filmes
