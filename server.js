@@ -512,10 +512,19 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 
 app.get('/recentes/animes', async (req, res) => {
     try {
-        // Consulta para obter os últimos animes adicionados
-        const recentAnimes = await Anime.find().sort({ createdAt: -1 });
+        const perPage = 32; // Número de animes por página
+        const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
 
-        // Obter o total de animes recentes
+        // Calcular o índice de início com base na página atual
+        const startIndex = (page - 1) * perPage;
+
+        // Consulta para obter os últimos animes adicionados com limite e ordenação
+        const recentAnimes = await Anime.find()
+            .sort({ createdAt: -1 })
+            .skip(startIndex)
+            .limit(perPage);
+
+        // Obter o total de animes
         const totalAnimes = await Anime.countDocuments();
 
         // Verificar se há animes recentes encontrados
@@ -530,6 +539,7 @@ app.get('/recentes/animes', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 // Rota para obter os últimos episódios
