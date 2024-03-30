@@ -43,6 +43,37 @@ app.get('/', async(req, res)=>{
     }
 })
 
+// Rota para obter a lista de animes com paginação
+app.get('/anime-list-page', async (req, res) => {
+    try {
+        const page = req.query.page || 1;
+        const limit = 30; // Limite de animes por página
+
+        // Contar o total de animes na base de dados
+        const totalAnimes = await Anime.countDocuments();
+
+        // Calcular o número total de páginas
+        const totalPages = Math.ceil(totalAnimes / limit);
+
+        // Verificar se a página solicitada está dentro do intervalo válido
+        if (page < 1 || page > totalPages) {
+            return res.status(404).send('Página não encontrada');
+        }
+
+        const paginationInfo = {
+            totalAnimes: totalAnimes,
+            totalPages: totalPages,
+            currentPage: page
+        };
+
+        return res.send(paginationInfo);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
+
 app.get('/search', async (req, res) => {
     try {
         const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
