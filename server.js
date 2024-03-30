@@ -51,7 +51,7 @@ app.get('/anime-list-page', async (req, res) => {
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter a lista de animes da página atual
-        const animeList = await Anime.find().skip(skip).limit(limit);
+        const animeList = await Anime.find().sort({ title: 1 }).skip(skip).limit(limit);
 
         return res.json(animeList);
     } catch (error) {
