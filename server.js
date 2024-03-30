@@ -527,21 +527,23 @@ app.get('/recentes/animes', async (req, res) => {
     }
 });
 
+// Rota para obter os últimos episódios
 app.get('/recentes/episodes', async (req, res) => {
+    const perPage = 25; // Número de episódios por página
+    const page = req.query.page || 1; // Página atual (padrão: 1)
+
     try {
-        // Agregação para obter apenas o último episódio de cada anime
         const recentEpisodes = await Episodio.aggregate([
-            { $sort: { anime: 1, createdAt: -1 } }, // Ordena os episódios por anime e data de criação descendente
+            { $sort: { anime: 1, createdAt: -1 } },
             {
                 $group: {
-                    _id: '$anime', // Agrupa os episódios pelo campo 'anime'
-                    latestEpisode: { $first: '$$ROOT' } // Projeta apenas o primeiro documento de cada grupo (último episódio)
+                    _id: '$anime',
+                    latestEpisode: { $first: '$$ROOT' }
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } } // Substitui o documento raiz pelo último episódio de cada grupo
-        ]);
+            { $replaceRoot: { newRoot: '$latestEpisode' } }
+        ]).skip((page - 1) * perPage).limit(perPage);
 
-        // Verificar se há episódios recentes encontrados
         if (recentEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio recente encontrado');
         }
@@ -552,24 +554,26 @@ app.get('/recentes/episodes', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 // Rota para obter os últimos episódios dublados de cada anime
 app.get('/recentes/episodes/dublados', async (req, res) => {
+    const perPage = 25; // Número de episódios por página
+    const page = req.query.page || 1; // Página atual (padrão: 1)
+
     try {
         const recentDubbedEpisodes = await Episodio.aggregate([
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
-            { $match: { 'animeInfo.dub': true } }, // Filter dubbed episodes
-            {
-                $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } // Sort by anime creation & episode creation (desc)
-            },
+            { $match: { 'animeInfo.dub': true } },
+            { $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } },
             {
                 $group: {
                     _id: '$anime',
-                    latestEpisode: { $first: '$$ROOT' } // Get the first episode (latest dubbed)
+                    latestEpisode: { $first: '$$ROOT' }
                 }
             },
             { $replaceRoot: { newRoot: '$latestEpisode' } }
-        ]);
+        ]).skip((page - 1) * perPage).limit(perPage);
 
         if (recentDubbedEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio dublado recente encontrado');
@@ -584,22 +588,23 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
 
 // Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
+    const perPage = 25; // Número de episódios por página
+    const page = req.query.page || 1; // Página atual (padrão: 1)
+
     try {
         const recentSubtitledEpisodes = await Episodio.aggregate([
             { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
             { $unwind: '$animeInfo' },
-            { $match: { 'animeInfo.dub': false } }, // Filter subtitled episodes
-            {
-                $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } // Sort by anime creation & episode creation (desc)
-            },
+            { $match: { 'animeInfo.dub': false } },
+            { $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } },
             {
                 $group: {
                     _id: '$anime',
-                    latestEpisode: { $first: '$$ROOT' } // Get the first episode (latest subtitled)
+                    latestEpisode: { $first: '$$ROOT' }
                 }
             },
             { $replaceRoot: { newRoot: '$latestEpisode' } }
-        ]);
+        ]).skip((page - 1) * perPage).limit(perPage);
 
         if (recentSubtitledEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio legendado recente encontrado');
@@ -611,6 +616,7 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 
