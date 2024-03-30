@@ -51,7 +51,7 @@ app.get('/anime-list-page', async (req, res) => {
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes
-        const totalAnimes = await Anime.countDocuments();
+        const totalAnimes = await Anime.countDocuments({ movie: { $ne: true } });
 
         // Obter a lista de animes da página atual
         const animeList = await Anime.find().sort({ title: 1 }).skip(skip).limit(limit);
