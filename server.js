@@ -43,30 +43,20 @@ app.get('/', async(req, res)=>{
     }
 })
 
+// Importe o modelo Anime, se necessário
+const Anime = require('./models/anime');
+
 // Rota para obter a lista de animes com paginação
 app.get('/anime-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
         const limit = 30; // Limite de animes por página
+        const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
-        // Contar o total de animes na base de dados
-        const totalAnimes = await Anime.countDocuments();
+        // Obter a lista de animes da página atual
+        const animeList = await Anime.find().skip(skip).limit(limit);
 
-        // Calcular o número total de páginas
-        const totalPages = Math.ceil(totalAnimes / limit);
-
-        // Verificar se a página solicitada está dentro do intervalo válido
-        if (page < 1 || page > totalPages) {
-            return res.status(404).send('Página não encontrada');
-        }
-
-        const paginationInfo = {
-            totalAnimes: totalAnimes,
-            totalPages: totalPages,
-            currentPage: page
-        };
-
-        return res.send(paginationInfo);
+        return res.json(animeList);
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
