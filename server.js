@@ -529,7 +529,7 @@ app.get('/recentes/animes', async (req, res) => {
 
 // Rota para obter os últimos episódios
 app.get('/recentes/episodes', async (req, res) => {
-    const perPage = 25; // Número de episódios por página
+    const perPage = 35; // Número de episódios por página
     const page = req.query.page || 1; // Página atual (padrão: 1)
 
     try {
@@ -557,7 +557,7 @@ app.get('/recentes/episodes', async (req, res) => {
 
 // Rota para obter os últimos episódios dublados de cada anime
 app.get('/recentes/episodes/dublados', async (req, res) => {
-    const perPage = 25; // Número de episódios por página
+    const perPage = 35; // Número de episódios por página
     const page = req.query.page || 1; // Página atual (padrão: 1)
 
     try {
@@ -588,7 +588,7 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
 
 // Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
-    const perPage = 25; // Número de episódios por página
+    const perPage = 35; // Número de episódios por página
     const page = req.query.page || 1; // Página atual (padrão: 1)
 
     try {
