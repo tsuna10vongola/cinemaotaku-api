@@ -50,11 +50,11 @@ app.get('/anime-list-page', async (req, res) => {
         const limit = 30; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
-        // Obter o número total de animes
+        // Obter o número total de animes que não são filmes
         const totalAnimes = await Anime.countDocuments({ movie: { $ne: true } });
 
-        // Obter a lista de animes da página atual
-        const animeList = await Anime.find().sort({ title: 1 }).skip(skip).limit(limit);
+        // Obter a lista de animes que não são filmes da página atual
+        const animeList = await Anime.find({ movie: { $ne: true } }).sort({ title: 1 }).skip(skip).limit(limit);
 
         return res.json({ totalAnimes, animeList });
     } catch (error) {
@@ -62,6 +62,7 @@ app.get('/anime-list-page', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 
