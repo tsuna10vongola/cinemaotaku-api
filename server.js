@@ -513,19 +513,24 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 app.get('/recentes/animes', async (req, res) => {
     try {
         // Consulta para obter os últimos animes adicionados
-        const recentAnimes = await Anime.find().sort({ createdAt: -1 })
-        
+        const recentAnimes = await Anime.find().sort({ createdAt: -1 });
+
+        // Obter o total de animes recentes
+        const totalAnimes = await Anime.countDocuments();
+
         // Verificar se há animes recentes encontrados
         if (recentAnimes.length === 0) {
             return res.status(404).send('Nenhum anime recente encontrado');
         }
 
-        return res.send(recentAnimes);
+        // Retornar tanto a lista de animes como o total de animes
+        return res.json({ totalAnimes, recentAnimes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 // Rota para obter os últimos episódios
 app.get('/recentes/episodes', async (req, res) => {
