@@ -596,11 +596,14 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
             { $replaceRoot: { newRoot: '$latestEpisode' } }
         ]).skip((page - 1) * perPage).limit(perPage);
 
+        // Obter o total de episódios dublados
+        const totalDubbedEpisodes = await Episodio.countDocuments({ 'animeInfo.dub': true });
+
         if (recentDubbedEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio dublado recente encontrado');
         }
 
-        return res.send(recentDubbedEpisodes);
+        return res.json({ totalDubbedEpisodes, recentDubbedEpisodes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
@@ -627,11 +630,14 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
             { $replaceRoot: { newRoot: '$latestEpisode' } }
         ]).skip((page - 1) * perPage).limit(perPage);
 
+        // Obter o total de episódios legendados
+        const totalSubtitledEpisodes = await Episodio.countDocuments({ 'animeInfo.dub': false });
+
         if (recentSubtitledEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio legendado recente encontrado');
         }
 
-        return res.send(recentSubtitledEpisodes);
+        return res.json({ totalSubtitledEpisodes, recentSubtitledEpisodes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
