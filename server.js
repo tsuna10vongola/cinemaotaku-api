@@ -128,7 +128,7 @@ app.get('/anime-AZ-page', async (req, res) => {
     try {
         const aph = req.query.aph.toUpperCase(); // Letra fornecida na URL
         const page = req.query.page || 1; // Número da página
-        const limit = 30; // Limite de animes por página
+        const limit = 31; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que começam com a letra fornecida
