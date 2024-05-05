@@ -47,7 +47,7 @@ app.get('/', async(req, res)=>{
 app.get('/anime-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 32; // Limite de animes por página
+        const limit = 31; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que não são filmes
@@ -67,7 +67,7 @@ app.get('/anime-list-page', async (req, res) => {
 app.get('/movie-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 32; // Limite de animes por página
+        const limit = 31; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que são filmes
@@ -87,7 +87,7 @@ app.get('/movie-list-page', async (req, res) => {
 app.get('/completed-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 32; // Limite de animes por página
+        const limit = 31; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que são filmes
@@ -107,7 +107,7 @@ app.get('/completed-list-page', async (req, res) => {
 app.get('/ongoing-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 32; // Limite de animes por página
+        const limit = 31; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que são filmes
@@ -512,7 +512,7 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 
 app.get('/recentes/animes', async (req, res) => {
     try {
-        const perPage = 32; // Número de animes por página
+        const perPage = 31; // Número de animes por página
         const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
 
         // Calcular o índice de início com base na página atual
@@ -637,37 +637,3 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
-
-
-
-
-
-
-// const AWS = require('aws-sdk');
-
-// AWS.config.update({
-//     accessKeyId: 'AKIA6GBMBE645KYG6Q6G',
-//     secretAccessKey: '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',
-//     region: 'sa-east-1'
-//   });
-
-//   const s3 = new AWS.S3();
-
-// // Função para gerar uma URL assinada para o vídeo
-// async function generateSignedUrl(video) {
-//     const params = {
-//         Bucket: 'cinemaotaku',
-//         Key: video,
-//       Expires: 7200 // Expira em 2 horas
-//     };
-    
-//     return new Promise((resolve, reject) => {
-//         s3.getSignedUrl('getObject', params, (err, url) => {
-//         if (err) {
-//           reject(err);
-//         } else {
-//           resolve(url);
-//         }
-//       });
-//     });
-//   }
