@@ -30,7 +30,7 @@ const Anime = mongoose.model('Anime', AnimeSchema, 'animes');
 app.get('/', async(req, res)=>{
 
     try{
-        const animes = await Anime.find()
+        const animes = await Anime.find().sort({ updatedAt: -1 })
     if(!animes){
         return res.status(404).send('Anime não encontrado');
     }
