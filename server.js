@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 mongoose.set('strictQuery', false);
 const app = express()
 app.use(express.json())
-const port = 3000
+const port = 3010
 
 mongoose.connect('mongodb+srv://sheriffvongola:NBNReL02k617MTrU@anime.as6tlgm.mongodb.net/')
 
@@ -277,7 +277,7 @@ app.post('/', async (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log('App running')
+    console.log('App running on port ', port)
 })
 
 
@@ -609,6 +609,37 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
+// Rota para obter animes por gênero com paginação
+app.get('/genre/:genre', async (req, res) => {
+    try {
+        const genre = req.params.genre;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 33; // Limite de animes por página
+        const skip = (page - 1) * limit;
+
+        // Criar uma expressão regular para buscar o gênero em qualquer parte da string
+        const genreRegex = new RegExp(genre, 'i');
+
+        // Obter o número total de animes que contêm o gênero
+        const totalAnimes = await Anime.countDocuments({ genres: genreRegex });
+
+        // Obter a lista de animes que contêm o gênero na página atual
+        const animeList = await Anime.find({ genres: genreRegex })
+            .sort({ title: 1 })
+            .skip(skip)
+            .limit(limit);
+
+        if (animeList.length === 0) {
+            return res.status(404).send('Nenhum anime encontrado para este gênero');
+        }
+
+        return res.json({ totalAnimes, animeList });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+}); 
 
 // Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
