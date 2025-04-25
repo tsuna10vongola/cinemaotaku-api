@@ -542,38 +542,65 @@ app.get('/recentes/animes', async (req, res) => {
 
 
 
-// Rota para obter os últimos episódios
+// Rota para obter os últimos episódios (todos, independente de ser dublado ou legendado)
 app.get('/recentes/episodes', async (req, res) => {
     const perPage = 35; // Número de episódios por página
     const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
 
     try {
-        // Obter o total de episódios recentes
-        const totalEpisodes = await Episodio.countDocuments();
-
         // Obter os episódios recentes paginados
         const recentEpisodes = await Episodio.aggregate([
-            { $sort: { anime: 1, createdAt: -1 } },
+            // Primeiro fazemos o lookup para pegar as informações do anime
+            { 
+                $lookup: { 
+                    from: 'animes', 
+                    localField: 'anime', 
+                    foreignField: '_id', 
+                    as: 'animeInfo' 
+                } 
+            },
+            // Desconstrói o array animeInfo
+            { $unwind: '$animeInfo' },
+            // Ordena todos os episódios por data de criação decrescente
+            { $sort: { createdAt: -1 } },
+            // Agrupa por anime e pega o primeiro episódio de cada grupo (que será o mais recente)
             {
                 $group: {
                     _id: '$anime',
                     latestEpisode: { $first: '$$ROOT' }
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } }
+            // Substitui o documento pelo episódio mais recente
+            { $replaceRoot: { newRoot: '$latestEpisode' } },
+            // Ordena os resultados finais por data de criação decrescente
+            { $sort: { createdAt: -1 } }
         ]).skip((page - 1) * perPage).limit(perPage);
+
+        // Obter o total de episódios únicos (um por anime)
+        const totalCount = await Episodio.aggregate([
+            {
+                $group: {
+                    _id: '$anime'
+                }
+            },
+            {
+                $count: 'total'
+            }
+        ]);
+
+        const totalEpisodes = totalCount.length > 0 ? totalCount[0].total : 0;
 
         if (recentEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio recente encontrado');
         }
 
-        // Retornar tanto a lista de episódios como o total de episódios
         return res.json({ totalEpisodes, recentEpisodes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
 });
+
 
 
 // Rota para obter os últimos episódios dublados de cada anime
@@ -583,21 +610,57 @@ app.get('/recentes/episodes/dublados', async (req, res) => {
 
     try {
         const recentDubbedEpisodes = await Episodio.aggregate([
-            { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
+            // Primeiro fazemos o lookup para pegar as informações do anime
+            { 
+                $lookup: { 
+                    from: 'animes', 
+                    localField: 'anime', 
+                    foreignField: '_id', 
+                    as: 'animeInfo' 
+                } 
+            },
+            // Desconstrói o array animeInfo
             { $unwind: '$animeInfo' },
+            // Filtra apenas animes dublados
             { $match: { 'animeInfo.dub': true } },
-            { $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } },
+            // Ordena todos os episódios por data de criação decrescente
+            { $sort: { createdAt: -1 } },
+            // Agrupa por anime e pega o primeiro episódio de cada grupo (que será o mais recente)
             {
                 $group: {
                     _id: '$anime',
                     latestEpisode: { $first: '$$ROOT' }
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } }
+            // Substitui o documento pelo episódio mais recente
+            { $replaceRoot: { newRoot: '$latestEpisode' } },
+            // Ordena os resultados finais por data de criação decrescente
+            { $sort: { createdAt: -1 } }
         ]).skip((page - 1) * perPage).limit(perPage);
 
-        // Obter o total de episódios dublados
-        const totalDubbedEpisodes = await Episodio.countDocuments({ 'animeInfo.dub': true });
+        // Obter o total de episódios dublados únicos (um por anime)
+        const totalCount = await Episodio.aggregate([
+            { 
+                $lookup: { 
+                    from: 'animes', 
+                    localField: 'anime', 
+                    foreignField: '_id', 
+                    as: 'animeInfo' 
+                } 
+            },
+            { $unwind: '$animeInfo' },
+            { $match: { 'animeInfo.dub': true } },
+            {
+                $group: {
+                    _id: '$anime'
+                }
+            },
+            {
+                $count: 'total'
+            }
+        ]);
+
+        const totalDubbedEpisodes = totalCount.length > 0 ? totalCount[0].total : 0;
 
         if (recentDubbedEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio dublado recente encontrado');
