@@ -8,6 +8,7 @@ const port = 3010
 
 mongoose.connect('mongodb+srv://sheriffvongola:NBNReL02k617MTrU@anime.as6tlgm.mongodb.net/')
 
+// Modificar o AnimeSchema para incluir views
 const AnimeSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     title: String,
@@ -22,6 +23,7 @@ const AnimeSchema = new mongoose.Schema({
     completed: Boolean,
     studio: String,
     movie: Boolean,
+    views: { type: Number, default: 0 }, // Novo campo
 }, { timestamps: true });
 
 const Anime = mongoose.model('Anime', AnimeSchema, 'animes');
@@ -774,3 +776,44 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         return res.status(500).send('Erro Interno do Servidor');
     }
 }); 
+
+// Adicionar nova rota para buscar os animes mais vistos
+app.get('/trending/animes', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        
+        const trendingAnimes = await Anime.find()
+            .sort({ views: -1 })
+            .limit(limit);
+
+        if (trendingAnimes.length === 0) {
+            return res.status(404).send('Nenhum anime encontrado');
+        }
+
+        return res.json(trendingAnimes);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
+// Rota para incrementar as visualizações de um anime
+app.post('/:id/views', async (req, res) => {
+    try {
+        const anime = await Anime.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } }, // Incrementa o campo views em 1
+            { new: true } // Retorna o documento atualizado
+        );
+
+        if (!anime) {
+            return res.status(404).send('Anime não encontrado');
+        }
+
+        return res.json({ views: anime.views });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+});
+
