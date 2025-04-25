@@ -642,27 +642,64 @@ app.get('/genre/:genre', async (req, res) => {
 }); 
 
 // Rota para obter os últimos episódios legendados de cada anime
+// Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
     const perPage = 35; // Número de episódios por página
     const page = req.query.page || 1; // Página atual (padrão: 1)
 
     try {
         const recentSubtitledEpisodes = await Episodio.aggregate([
-            { $lookup: { from: 'animes', localField: 'anime', foreignField: '_id', as: 'animeInfo' } },
+            // Primeiro fazemos o lookup para pegar as informações do anime
+            { 
+                $lookup: { 
+                    from: 'animes', 
+                    localField: 'anime', 
+                    foreignField: '_id', 
+                    as: 'animeInfo' 
+                } 
+            },
+            // Desconstrói o array animeInfo
             { $unwind: '$animeInfo' },
+            // Filtra apenas animes não dublados
             { $match: { 'animeInfo.dub': false } },
-            { $sort: { 'animeInfo.createdAt': -1, createdAt: -1 } },
+            // Ordena todos os episódios por data de criação decrescente
+            { $sort: { createdAt: -1 } },
+            // Agrupa por anime e pega o primeiro episódio de cada grupo (que será o mais recente)
             {
                 $group: {
                     _id: '$anime',
                     latestEpisode: { $first: '$$ROOT' }
                 }
             },
-            { $replaceRoot: { newRoot: '$latestEpisode' } }
+            // Substitui o documento pelo episódio mais recente
+            { $replaceRoot: { newRoot: '$latestEpisode' } },
+            // Ordena os resultados finais por data de criação decrescente
+            { $sort: { createdAt: -1 } }
         ]).skip((page - 1) * perPage).limit(perPage);
 
-        // Obter o total de episódios legendados
-        const totalSubtitledEpisodes = await Episodio.countDocuments({ 'animeInfo.dub': false });
+        // Obter o total de episódios legendados únicos (um por anime)
+        const totalCount = await Episodio.aggregate([
+            { 
+                $lookup: { 
+                    from: 'animes', 
+                    localField: 'anime', 
+                    foreignField: '_id', 
+                    as: 'animeInfo' 
+                } 
+            },
+            { $unwind: '$animeInfo' },
+            { $match: { 'animeInfo.dub': false } },
+            {
+                $group: {
+                    _id: '$anime'
+                }
+            },
+            {
+                $count: 'total'
+            }
+        ]);
+
+        const totalSubtitledEpisodes = totalCount.length > 0 ? totalCount[0].total : 0;
 
         if (recentSubtitledEpisodes.length === 0) {
             return res.status(404).send('Nenhum episódio legendado recente encontrado');
@@ -673,4 +710,4 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
     }
-});
+}); 
