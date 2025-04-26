@@ -817,3 +817,22 @@ app.post('/:id/views', async (req, res) => {
     }
 });
 
+// Rota para obter o último episódio de um anime específico
+app.get('/:animeId/latest-episode', async (req, res) => {
+    try {
+        const latestEpisode = await Episodio.findOne({ 
+            anime: req.params.animeId 
+        })
+        .sort({ number: -1 }) // Ordena por número em ordem decrescente
+        .select('number title image video'); // Seleciona apenas os campos necessários
+
+        if (!latestEpisode) {
+            return res.status(404).send('Nenhum episódio encontrado para este anime');
+        }
+
+        return res.json(latestEpisode);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Erro Interno do Servidor');
+    }
+}); 
