@@ -92,11 +92,17 @@ app.get('/completed-list-page', async (req, res) => {
         const limit = 37; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
-        // Obter o número total de animes que são filmes
-        const totalAnimes = await Anime.countDocuments({ completed: true });
+        // Obter o número total de animes completos que não são filmes
+        const totalAnimes = await Anime.countDocuments({ 
+            completed: true,
+            movie: { $ne: true } // Não incluir animes onde movie = true
+        });
 
-        // Obter a lista de animes que são filmes da página atual
-        const animeList = await Anime.find({ completed: true }).sort({ title: 1 }).skip(skip).limit(limit);
+        // Obter a lista de animes completos que não são filmes da página atual
+        const animeList = await Anime.find({ 
+            completed: true,
+            movie: { $ne: true } // Não incluir animes onde movie = true
+        }).sort({ title: 1 }).skip(skip).limit(limit);
 
         return res.json({ totalAnimes, animeList });
     } catch (error) {
@@ -289,6 +295,7 @@ const EpisodioSchema = new mongoose.Schema({
     title: String,
     image: String,
     video: String,
+    video1: String,
     anime: String,
     download: String,
 },
@@ -400,6 +407,7 @@ app.post('/:animeId/episodios', async (req, res) => {
             title: ep.title,
             image: ep.image,
             video: ep.video,
+            video1: ep.video1,
             download: ep.download,
             anime: animeId
         })));
