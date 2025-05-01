@@ -158,8 +158,9 @@ app.get('/anime-AZ-page', async (req, res) => {
 // Rota para obter a lista de animes pesquisados
 app.get('/search', async (req, res) => {
     try {
-        const search = req.query.anime; // Mudança aqui para corresponder ao parâmetro 'anime'
+        const search = req.query.anime;
         const regex = new RegExp(search, 'i');
+        const limit = parseInt(req.query.limit) || 36; // Pega o limit da query ou usa 36
 
         if (!search) {
             return res.status(400).send('Por favor, forneça um termo de pesquisa');
@@ -168,13 +169,9 @@ app.get('/search', async (req, res) => {
         const animes = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
-                // { description: { $regex: regex } },
-                // { studio: { $regex: regex } },
                 { english: { $regex: regex } },
-                
-                // Adicione outros campos relevantes aqui
             ]
-        });
+        }).limit(limit); // <-- Aqui está o limit aplicado
 
         if (!animes || animes.length === 0) {
             return res.status(404).send('Nenhum anime encontrado');
