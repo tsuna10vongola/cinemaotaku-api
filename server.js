@@ -167,17 +167,16 @@ app.get('/search', async (req, res) => {
             return res.status(400).send('Por favor, forneça um termo de pesquisa');
         }
         
-        // (Opcional) Total de animes encontrados para paginação futura
+        // Total de animes encontrados para paginação
         const totalAnimes = await Anime.countDocuments({
             $or: [
                 { title: { $regex: regex } },
                 { english: { $regex: regex } },
             ]
         });
-        res.set('X-Total-Animes', totalAnimes);
 
         // Lista paginada
-        const animes = await Anime.find({
+        const animeList = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
                 { english: { $regex: regex } },
@@ -187,8 +186,8 @@ app.get('/search', async (req, res) => {
         .skip(skip)
         .limit(limit);
 
-        // Retorna apenas o array, como era antes!
-        return res.json(animes);
+        // Retorna objeto igual ao /anime-list-page
+        return res.json({ totalAnimes, animeList });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
