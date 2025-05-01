@@ -157,7 +157,7 @@ app.get('/anime-AZ-page', async (req, res) => {
 
 app.get('/search', async (req, res) => {
     try {
-        const search = req.query.anime;
+        const search = req.query.anime; // <-- deve ser 'anime'
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 36;
         const skip = (page - 1) * limit;
@@ -167,7 +167,6 @@ app.get('/search', async (req, res) => {
             return res.status(400).send('Por favor, forneça um termo de pesquisa');
         }
         
-        // Total de animes encontrados para paginação
         const totalAnimes = await Anime.countDocuments({
             $or: [
                 { title: { $regex: regex } },
@@ -175,7 +174,6 @@ app.get('/search', async (req, res) => {
             ]
         });
 
-        // Lista paginada
         const animeList = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
@@ -186,7 +184,6 @@ app.get('/search', async (req, res) => {
         .skip(skip)
         .limit(limit);
 
-        // Retorna objeto igual ao /anime-list-page
         return res.json({ totalAnimes, animeList });
     } catch (error) {
         console.error(error);
