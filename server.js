@@ -155,29 +155,38 @@ app.get('/anime-AZ-page', async (req, res) => {
     }
 });
 
-// Rota para obter a lista de animes pesquisados
 app.get('/search', async (req, res) => {
     try {
         const search = req.query.anime;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 36;
+        const skip = (page - 1) * limit;
         const regex = new RegExp(search, 'i');
-        const limit = parseInt(req.query.limit) || 36; // Pega o limit da query ou usa 36
 
         if (!search) {
             return res.status(400).send('Por favor, forneça um termo de pesquisa');
         }
         
+        // Total de animes encontrados
+        const totalAnimes = await Anime.countDocuments({
+            $or: [
+                { title: { $regex: regex } },
+                { english: { $regex: regex } },
+            ]
+        });
+
+        // Lista paginada
         const animes = await Anime.find({
             $or: [
                 { title: { $regex: regex } },
                 { english: { $regex: regex } },
             ]
-        }).limit(limit); // <-- Aqui está o limit aplicado
+        })
+        .sort({ title: 1 })
+        .skip(skip)
+        .limit(limit);
 
-        if (!animes || animes.length === 0) {
-            return res.status(404).send('Nenhum anime encontrado');
-        }
-
-        return res.send(animes);
+        return res.json({ totalAnimes, animes });
     } catch (error) {
         console.error(error);
         return res.status(500).send('Erro Interno do Servidor');
