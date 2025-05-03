@@ -49,7 +49,7 @@ app.get('/', async(req, res)=>{
 app.get('/anime-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que não são filmes
@@ -69,7 +69,7 @@ app.get('/anime-list-page', async (req, res) => {
 app.get('/movie-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que são filmes
@@ -89,7 +89,7 @@ app.get('/movie-list-page', async (req, res) => {
 app.get('/completed-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes completos que não são filmes
@@ -115,7 +115,7 @@ app.get('/completed-list-page', async (req, res) => {
 app.get('/ongoing-list-page', async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que são filmes
@@ -136,7 +136,7 @@ app.get('/anime-AZ-page', async (req, res) => {
     try {
         const aph = req.query.aph.toUpperCase(); // Letra fornecida na URL
         const page = req.query.page || 1; // Número da página
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit; // Pular os documentos das páginas anteriores
 
         // Obter o número total de animes que começam com a letra fornecida
@@ -526,7 +526,7 @@ app.delete('/:animeId/episodios/:id', async (req, res) => {
 
 app.get('/recentes/animes', async (req, res) => {
     try {
-        const perPage = 37; // Número de animes por página
+        const perPage = 36; // Número de animes por página
         const page = parseInt(req.query.page) || 1; // Página atual (padrão: 1)
 
         // Calcular o índice de início com base na página atual
@@ -692,7 +692,7 @@ app.get('/genre/:genre', async (req, res) => {
     try {
         const genre = req.params.genre;
         const page = parseInt(req.query.page) || 1;
-        const limit = 37; // Limite de animes por página
+        const limit = 36; // Limite de animes por página
         const skip = (page - 1) * limit;
 
         // Criar uma expressão regular para buscar o gênero em qualquer parte da string
@@ -718,7 +718,6 @@ app.get('/genre/:genre', async (req, res) => {
     }
 }); 
 
-// Rota para obter os últimos episódios legendados de cada anime
 // Rota para obter os últimos episódios legendados de cada anime
 app.get('/recentes/episodes/legendados', async (req, res) => {
     const perPage = 35; // Número de episódios por página
