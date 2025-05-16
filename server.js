@@ -808,7 +808,6 @@ app.post('/:id/views', async (req, res) => {
   res.sendStatus(200);
 });
 
-// Ranking
 app.get('/trending/animes', async (req, res) => {
   const period = req.query.period || 'total';
   const limit = parseInt(req.query.limit) || 10;
@@ -839,11 +838,12 @@ app.get('/trending/animes', async (req, res) => {
   // Busca os dados dos animes
   const ids = views.map(v => v._id);
   const animes = await Anime.find({ _id: { $in: ids } });
-  // Junta os dados
+  // Junta os dados, filtrando só os que existem
   const result = views.map(v => {
-    const anime = animes.find(a => a._id == v._id);
+    const anime = animes.find(a => String(a._id) === String(v._id));
+    if (!anime) return null;
     return { ...anime.toObject(), views: v.views };
-  });
+  }).filter(Boolean);
   res.json(result);
 });
 
