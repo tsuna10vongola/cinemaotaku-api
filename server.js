@@ -1,11 +1,13 @@
 const express = require('express')
 const mongoose = require('mongoose')
+const cors = require('cors'); // Importe o middleware cors
 // const Product = require('./models/episodioModel')
 mongoose.set('strictQuery', false);
 const app = express()
 app.use(express.json())
 const port = 3010
 
+app.use(cors());
 mongoose.connect('mongodb+srv://sheriffvongola:NBNReL02k617MTrU@anime.as6tlgm.mongodb.net/')
 
 // Modificar o AnimeSchema para incluir views
