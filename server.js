@@ -28,6 +28,13 @@ const AnimeSchema = new mongoose.Schema({
 
 const Anime = mongoose.model('Anime', AnimeSchema, 'animes');
 
+const AnimeViewSchema = new mongoose.Schema({
+  animeId: { type: String, required: true },
+  date: { type: String, required: true }, // 'YYYY-MM-DD'
+  count: { type: Number, default: 1 }
+});
+
+const AnimeView = mongoose.model('AnimeView', AnimeViewSchema, 'anime_views');
 
 app.get('/', async(req, res)=>{
 
@@ -788,44 +795,56 @@ app.get('/recentes/episodes/legendados', async (req, res) => {
     }
 }); 
 
-// Adicionar nova rota para buscar os animes mais vistos
-app.get('/trending/animes', async (req, res) => {
-    try {
-        const limit = parseInt(req.query.limit) || 10;
-        
-        const trendingAnimes = await Anime.find()
-            .sort({ views: -1 })
-            .limit(limit);
-
-        if (trendingAnimes.length === 0) {
-            return res.status(404).send('Nenhum anime encontrado');
-        }
-
-        return res.json(trendingAnimes);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send('Erro Interno do Servidor');
-    }
+// Incrementa visualização
+app.post('/:id/views', async (req, res) => {
+  const animeId = req.params.id;
+  const today = new Date().toISOString().slice(0, 10);
+  await Anime.findByIdAndUpdate(animeId, { $inc: { views: 1 } });
+  await AnimeView.findOneAndUpdate(
+    { animeId, date: today },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  );
+  res.sendStatus(200);
 });
 
-// Rota para incrementar as visualizações de um anime
-app.post('/:id/views', async (req, res) => {
-    try {
-        const anime = await Anime.findByIdAndUpdate(
-            req.params.id,
-            { $inc: { views: 1 } }, // Incrementa o campo views em 1
-            { new: true } // Retorna o documento atualizado
-        );
-
-        if (!anime) {
-            return res.status(404).send('Anime não encontrado');
-        }
-
-        return res.json({ views: anime.views });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send('Erro Interno do Servidor');
+// Ranking
+app.get('/trending/animes', async (req, res) => {
+  const period = req.query.period || 'total';
+  const limit = parseInt(req.query.limit) || 10;
+  if (period === 'total') {
+    const animes = await Anime.find().sort({ views: -1 }).limit(limit);
+    return res.json(animes);
+  }
+  let match = {};
+  if (period === 'day') {
+    match.date = new Date().toISOString().slice(0, 10);
+  } else if (period === 'week') {
+    const now = new Date();
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      week.push(d.toISOString().slice(0, 10));
     }
+    match.date = { $in: week };
+  }
+  // Agrupa por animeId e soma as views
+  const views = await AnimeView.aggregate([
+    { $match: match },
+    { $group: { _id: "$animeId", views: { $sum: "$count" } } },
+    { $sort: { views: -1 } },
+    { $limit: limit }
+  ]);
+  // Busca os dados dos animes
+  const ids = views.map(v => v._id);
+  const animes = await Anime.find({ _id: { $in: ids } });
+  // Junta os dados
+  const result = views.map(v => {
+    const anime = animes.find(a => a._id == v._id);
+    return { ...anime.toObject(), views: v.views };
+  });
+  res.json(result);
 });
 
 // Rota para obter o último episódio de um anime específico
