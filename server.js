@@ -811,42 +811,55 @@ app.post('/:id/views', async (req, res) => {
 });
 
 app.get('/trending/animes', async (req, res) => {
-  const period = req.query.period || 'total';
-  const limit = parseInt(req.query.limit) || 10;
-  if (period === 'total') {
-    const animes = await Anime.find().sort({ views: -1 }).limit(limit);
-    return res.json(animes);
-  }
-  let match = {};
-  if (period === 'day') {
-    match.date = new Date().toISOString().slice(0, 10);
-  } else if (period === 'week') {
-    const now = new Date();
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      week.push(d.toISOString().slice(0, 10));
+    const period = req.query.period || 'total';
+    const limit = parseInt(req.query.limit) || 10;
+
+    if (period === 'total') {
+        const animes = await Anime.find().sort({ views: -1 }).limit(limit);
+        return res.json(animes);
     }
-    match.date = { $in: week };
-  }
-  // Agrupa por animeId e soma as views
-  const views = await AnimeView.aggregate([
-    { $match: match },
-    { $group: { _id: "$animeId", views: { $sum: "$count" } } },
-    { $sort: { views: -1 } },
-    { $limit: limit }
-  ]);
-  // Busca os dados dos animes
-  const ids = views.map(v => v._id);
-  const animes = await Anime.find({ _id: { $in: ids } });
-  // Junta os dados, filtrando só os que existem
-  const result = views.map(v => {
-    const anime = animes.find(a => String(a._id) === String(v._id));
-    if (!anime) return null;
-    return { ...anime.toObject(), views: v.views };
-  }).filter(Boolean);
-  res.json(result);
+
+    let match = {};
+    const now = new Date();
+
+    if (period === 'day') {
+        match.date = now.toISOString().slice(0, 10);
+    } else if (period === 'week') {
+        const week = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - i);
+            week.push(d.toISOString().slice(0, 10));
+        }
+        match.date = { $in: week };
+    } else if (period === 'month') {
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1).toISOString().slice(0, 10);
+        const lastDayOfMonth = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+        match.date = { $gte: firstDayOfMonth, $lte: lastDayOfMonth };
+    }
+
+    // Agrupa por animeId e soma as views
+    const views = await AnimeView.aggregate([
+        { $match: match },
+        { $group: { _id: "$animeId", views: { $sum: "$count" } } },
+        { $sort: { views: -1 } },
+        { $limit: limit }
+    ]);
+
+    // Busca os dados dos animes
+    const ids = views.map(v => v._id);
+    const animes = await Anime.find({ _id: { $in: ids } });
+
+    // Junta os dados, filtrando só os que existem
+    const result = views.map(v => {
+        const anime = animes.find(a => String(a._id) === String(v._id));
+        if (!anime) return null;
+        return { ...anime.toObject(), views: v.views };
+    }).filter(Boolean);
+
+    res.json(result);
 });
 
 // Rota para obter o último episódio de um anime específico
